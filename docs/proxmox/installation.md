@@ -11,3 +11,5 @@ This document will contain my notes and procedures for installing Proxmox VE.
 - Verify network connectivity 
 - Acces the Proxmox web interface
 - Document the installation process
+
+## Issues and Resolutions
