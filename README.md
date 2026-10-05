@@ -15,3 +15,11 @@ This repository documents my Proxmox homelab.
 ## Project Status
 
 This homelab is currently under active development.
+
+## Learning Goals
+
+- Understand virtualization and hypervisors
+- Develop Linux admnistration skills
+- Learn network fundamentals
+- Practice Git and Github workflows
+- Document infrastructure using industry-standard practices
