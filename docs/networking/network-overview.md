@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the network configuration of my Proxmox homelab. It documents how the Proxmox host, Ubuntu server virtual machine, and other devices on my local network
+This document describes the network configuration of my Proxmox homelab. It documents how the Proxmox host, Ubuntu server virtual machine, and other devices on my local network are connected
 
 The goal of this document is to record the current network configuration while also demonstrating my understanding of basic networking concepts used within the homelab.
 
