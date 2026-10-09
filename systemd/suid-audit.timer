@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SUID Security Audit Daily
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+Unit=suid-audit.service
+
+[Install]
+WantedBy=timers.target

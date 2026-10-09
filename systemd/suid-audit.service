@@ -1,0 +1,9 @@
+
+[Unit]
+Description=SUID Security Audit 
+Documentation=man:systemd.service(5)
+
+[Service]
+Type=oneshot
+ExecStart=/home/homelab/homelab-projects/scripts/suid-audit.sh
+WorkingDirectory=/home/homelab/homelab-projects
