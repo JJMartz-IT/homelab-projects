@@ -4,11 +4,11 @@ OUTPUT="$HOME/security-audit/suid-current.txt"
 BASELINE="$HOME/security-audit/suid-baseline-v2.txt"
 LOG="$HOME/security-audit/suid-audit.log"
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-
+LOCK_FILE="$HOME/security-audit/suid-audit.lock"
 check_dependencies() {
     local cmd
 
-    for cmd in find stat sort diff mktemp mv rm wc date
+    for cmd in find stat sort diff mktemp mv rm wc date flock
     do
 	if ! command -v "$cmd" > /dev/null 2>&1
 	then
@@ -19,6 +19,21 @@ check_dependencies() {
     done
 
     echo "Dependency checks passed."
+}
+
+acquire_lock() {
+    exec 9>"$LOCK_FILE" || {
+	echo "ERROR: Could not open lock file."
+	exit 2
+    }
+    if ! flock -n 9
+    then
+	echo "ERROR: another SUID audit is already running."
+	echo "$TIMESTAMP ERROR: Audit already runnung." >> "$LOG"
+	exit 2
+    fi
+
+    echo "Audit lock acquired."
 }
 
 print_header() {
@@ -62,6 +77,8 @@ run_scan() {
 }
 
 check_dependencies
+
+acquire_lock
 
 print_header
 
