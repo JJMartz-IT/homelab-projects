@@ -1,0 +1,7 @@
+
+[Unit]
+Description=Homelab Disk Usage Monitor
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/homelab/homelab-projects/scripts/disk-monitor.sh
