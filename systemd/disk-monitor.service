@@ -6,3 +6,4 @@ Description=Homelab Disk Usage Monitor
 Type=oneshot
 ExecStart=/bin/bash /home/homelab/homelab-projects/scripts/disk-monitor.sh
 NoNewPrivileges=yes
+UMask=0077
