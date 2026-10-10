@@ -1,6 +1,10 @@
 #!/bin/bash
 
-THRESHOLD=80
+THRESHOLD=${1:-80}
+if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || (( 10#$THRESHOLD < 1 || 10#$THRESHOLD > 100 )); then
+    echo "ERROR: Threshold must be a number between 1 and 100."
+    exit 2
+fi
 LOG_DIR="$HOME/security-audit"
 LOG_FILE="$LOG_DIR/disk-monitor.log"
 
