@@ -8,13 +8,25 @@ fi
 LOG_DIR="$HOME/security-audit"
 LOG_FILE="$LOG_DIR/disk-monitor.log"
 
-mkdir -p "$LOG_DIR"
+if ! mkdir -p "$LOG_DIR"; then
+    echo "ERROR: Could not create log directory: $LOG_DIR" >&2
+    exit 2
+fi
+
+write_log() {
+    local message="$1"
+
+    if ! printf '%s\n' "$message" >> "$LOG_FILE"; then
+        echo "ERROR: Failed to write to $LOG_FILE" >&2
+        exit 2
+    fi
+}
 
 USAGE=$(df -P / | awk 'NR==2 {gsub(/%/, "", $5); print $5}')
 
 if ! [[ "$USAGE" =~ ^[0-9]+$ ]]; then
     echo "ERROR: Could not determine disk usage."
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | ERROR | Unable to determine disk usage" >> "$LOG_FILE"
+    write_log "$(date '+%Y-%m-%d %H:%M:%S') | ERROR | Unable to determine disk usage"
     exit 2
 fi
 
@@ -24,11 +36,11 @@ echo "Warning threshold: ${THRESHOLD}%"
 
 if [ "$USAGE" -ge "$THRESHOLD" ]; then
     echo "WARNING: Disk usage is too high!"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | WARNING | Usage: ${USAGE}% | Threshold: ${THRESHOLD}%" >> "$LOG_FILE"
+    write_log "$(date '+%Y-%m-%d %H:%M:%S') | WARNING | Usage: ${USAGE}% | Threshold: ${THRESHOLD}%"
     exit 1
 else
     echo "PASS: Disk usage is within safe limits."
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | PASS | Usage: ${USAGE}% | Threshold: ${THRESHOLD}%" >> "$LOG_FILE"
+    write_log "$(date '+%Y-%m-%d %H:%M:%S') | PASS | Usage: ${USAGE}% | Threshold: ${THRESHOLD}%"
     exit 0
 fi
 
