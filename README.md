@@ -16,6 +16,10 @@ This repository documents my Proxmox homelab.
 
 This homelab is currently under active development.
 
+## Current Projects
+
+- [Minecraft Java Server in a Proxmox LXC](docs/minecraft-lxc/MINECRAFT_README.md)
+
 ## Learning Goals
 
 - Understand virtualization and hypervisors
