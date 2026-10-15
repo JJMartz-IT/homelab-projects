@@ -42,7 +42,7 @@ The computer originally came with Windows 10 Pro. Installing Proxmox onto the se
 | Setting | Value |
 | --- | --- |
 | Physical Ethernet interface | `enp0s31f6` |
-| Management IP address and prefix | `192.168.1.0/24` |
+| Management IP address and prefix | `192.168.1.100/24` |
 | Gateway | `192.168.1.1` |
 | DNS server | `8.8.8.8` |
 | Hostname | `Main.arpa` |
