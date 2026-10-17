@@ -1,0 +1,23 @@
+[Unit]
+Description=Minecraft Bedrock Dedicated Server
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=bedrock
+Group=bedrock
+WorkingDirectory=/srv/bedrock
+Environment=LD_LIBRARY_PATH=/srv/bedrock
+ExecStart=/srv/bedrock/bedrock_server
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=180
+NoNewPrivileges=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
