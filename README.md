@@ -18,7 +18,11 @@ This homelab is currently under active development.
 
 ## Current Projects
 
+- [Proxmox VE Installation](docs/proxmox/installation.md)
+- [SUID AUDIT](docs/suid-audit/suid-audit.md)
+- [Network Overview](docs/networking/network-overview.md)
 - [Minecraft Java Server in a Proxmox LXC](docs/minecraft-lxc/MINECRAFT_README.md)
+- [Minecraft Bedrock Server in a Proxmox LXC](docs/bedrock-lxc/README.md)
 
 ## Learning Goals
 
@@ -27,3 +31,5 @@ This homelab is currently under active development.
 - Learn network fundamentals
 - Practice Git and Github workflows
 - Document infrastructure using industry-standard practices
+- Understand Linux Containers
+- Document projects for leisure and enterprise roles
