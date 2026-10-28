@@ -1,0 +1,8 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+pipe=/run/bedrock-console/input
+rm -f -- "$pipe"
+mkfifo -m 600 "$pipe"
+exec 3<>"$pipe"
+exec /srv/bedrock/bedrock_server <&3

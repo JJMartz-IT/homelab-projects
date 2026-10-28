@@ -160,3 +160,19 @@ Router / Default Gateway
 	|
      8.8.8.8
 ```
+
+## Bedrock LXC connectivity update — October 28, 2026
+
+The original Bedrock service runs in CT 102 on vmbr0, separately from the
+Ubuntu VM described above. It supports approved remote players through
+Tailscale.
+
+The working deployment uses NetherNet: TCP 19132 for signaling and a
+configured UDP range of 19140–19155 for game traffic. The earlier
+UDP-19132-only assumption did not describe the working iPad connection.
+Tailscale ping, signaling health and actual player admission are distinct
+checks.
+
+See [current service and networking operations](../bedrock-lxc/operations.md)
+for commands and the recorded troubleshooting outcome. Retrieve current
+addresses from the container rather than copying another guest's address.

@@ -2,11 +2,23 @@
 
 ## Status
 
-Deployment complete.
+Deployment complete; operational record updated October 28, 2026.
 
-Installation, connectivity, service operation, world persistence,
-remote access, backups, and isolated recovery were verified during
-the lab. Verification was confirmed on October 16, 2026.
+The original installation was verified on October 16. Later work imported
+ImportedWorld, configured add-ons and console access, restored buildings
+after an unexpected shutdown, and added scheduled backups with player
+warnings. The update from server 1.26.52.3 to 1.26.60.6 was reported working
+with the 26.60 client on October 28.
+
+Use the operational guides for the current setup:
+
+- [Service, console commands and NetherNet connectivity](operations.md)
+- [ImportedWorld and add-ons](addons.md)
+- [Scheduled backups and world recovery](backup-recovery.md)
+- [Manual updates and the October 28 upgrade](updates.md)
+
+The installation steps below retain the original deployment context.
+They are not instructions to reinstall over the live server.
 
 ## Overview
 
@@ -57,8 +69,11 @@ here does not imply they are installed in this container.
 | IPv4 configuration | DHCP with router reservation |
 | Default gateway | 192.168.1.1 |
 | DNS configuration | Inherit Proxmox host settings |
-| IPv4 game port | UDP 19132 |
-| IPv6 game port | UDP 19133, when IPv6 is configured |
+| Current transport | NetherNet |
+| Signaling port | TCP 19132 |
+| Configured game UDP range | 19140–19155 |
+| Active world | ImportedWorld |
+| Confirmed updated release | 1.26.60.6 |
 | Server directory | /srv/bedrock |
 | Service account | bedrock |
 | Service name | bedrock.service |
@@ -79,10 +94,9 @@ tailscale ip -4
 Use the actual Bedrock address when connecting. Do not reuse the
 Java container's address, 192.168.1.60.
 
-The attempted download during setup was named
-`bedrock-server-1.26.52.3.zip`. The successful browser download was
-renamed `bedrock-server.zip`. The server startup log is the authority
-for the installed version.
+The original download was 1.26.52.3. The October 28 update used
+`bedrock-server-1.26.60.6.zip`; see the [update record](updates.md).
+The startup log is the authority for the currently running version.
 
 ### Resource planning
 
@@ -338,11 +352,14 @@ server-portv6=19133
 enable-lan-visibility=true
 view-distance=8
 tick-distance=4
-level-name=BedrockHomelab
+level-name=ImportedWorld
 default-player-permission-level=member
 ```
 
-Leave other settings at their supplied defaults.
+For the existing server, preserve its current settings. The later
+working configuration uses `transport=nethernet` and a configured UDP
+range; see [current networking](operations.md#nethernet-and-tailscale).
+Do not replace an existing world name or settings with fresh defaults.
 
 Save with **Ctrl+O**, press **Enter**, then exit with **Ctrl+X**.
 
@@ -441,46 +458,28 @@ so the service has time to stop.
 
 ### 10. Verify LAN access
 
-**Why:**
-
-Bedrock uses UDP 19132 for this IPv4 setup. A TCP test does not
-verify the Bedrock game connection.
+**Why:** The deployed NetherNet setup uses TCP signaling and a separate
+UDP game range. The original UDP-19132-only test no longer describes it.
 
 **How — inside the container:**
 
 ```bash
-ss -lunp | grep ':19132'
+ss -lntup
+curl --noproxy '*' --connect-timeout 5 --max-time 10 \
+  http://127.0.0.1:19132/v1/join
 ```
 
-Expect a UDP socket associated with `bedrock_server`.
+Permit TCP 19132 and the configured UDP 19140–19155 range through
+applicable firewalls for approved clients. See the
+[networking record](operations.md#nethernet-and-tailscale) before changing
+transport or advertised addresses.
 
-`UNCONN` is normal output for this UDP socket.
+Add the server in Minecraft using the container's actual address and
+port 19132, then join with a compatible stable client. Place a distinctive
+block, disconnect and reconnect to verify persistence.
 
-If the Proxmox firewall filters incoming connections, add an
-enabled rule under **CT 102 → Firewall**:
-
-| Field | Value |
-| --- | --- |
-| Direction | in |
-| Action | ACCEPT |
-| Protocol | udp |
-| Source | 192.168.1.0/24 |
-| Destination port | 19132 |
-
-Place the rule before an applicable drop rule. Any additional active
-firewall must permit the same traffic.
-
-In Minecraft for Windows, Android, or iOS, add the server using:
-
-- Address: the Bedrock container's actual LAN address.
-- Port: `19132`.
-
-Use a compatible stable Bedrock client release.
-
-Join the world, place a distinctive block, disconnect, and reconnect.
-
-Do not use PowerShell's `Test-NetConnection -Port` as proof of
-Bedrock connectivity; that command tests TCP.
+A successful HTTP response checks signaling; actual gameplay remains a
+separate check.
 
 ### 11. Verify shutdown and persistence
 
@@ -579,12 +578,11 @@ Share the `minecraft-bedrock` machine with approved friends.
 Friends install Tailscale, sign into their own accounts, and
 accept the share.
 
-Adapt the existing tailnet policy to permit approved shared users
-to reach this device on `udp:19132`. Check broader matching rules
-because access permissions are additive.
-
-If Proxmox filters the traffic, permit UDP 19132 from the friends'
-actual Tailscale source addresses as well.
+Adapt the existing tailnet policy to permit approved shared users to
+reach TCP 19132 and the configured UDP 19140–19155 range. Check broader
+matching rules because access permissions are additive. Any filtering
+Proxmox/container firewall must allow the corresponding traffic too.
+See [the iPad troubleshooting outcome](operations.md#nethernet-and-tailscale).
 
 Remote players connect using the address shown to them in
 Tailscale and port `19132`.
@@ -602,7 +600,7 @@ Run these commands inside CT 102.
 | --- | --- |
 | Start | `systemctl start bedrock` |
 | Stop gracefully | `systemctl stop bedrock` |
-| Restart | `systemctl restart bedrock` |
+| Restart | Use the coordinated stop/wait/start procedure in [operations](operations.md#connection-failure-after-backups) |
 | Check status | `systemctl status bedrock --no-pager -l` |
 | Recent logs | `journalctl -u bedrock -b -n 100 --no-pager` |
 | Follow logs | `journalctl -u bedrock -f` |
@@ -614,21 +612,22 @@ Press **Ctrl+C** to exit log-following. This does not stop the server.
 
 ### Changing the allowlist later
 
-The systemd service does not provide an attached interactive
-game console.
+The installed FIFO launcher and command helper allow game commands while
+the systemd service is running:
 
-To use the game-console commands:
+```bash
+bedrock-command allowlist add "Your Exact Gamertag"
+bedrock-command list
+```
 
-1. Arrange downtime.
-2. Stop the systemd service.
-3. Start the foreground server using the command in Step 8.
-4. Add or remove players.
-5. Enter `stop`.
-6. Start the systemd service again.
-
+See [console operation](operations.md#logs-versus-console-commands).
+Journal following shows output; it is not an interactive game console.
 Never run two server processes against the same world directory.
 
 ### Updates
+
+Updates remain manual. See the [completed October 28 update](updates.md)
+for staging, backup coordination, SSH transfer troubleshooting and rollback.
 
 1. Stop the server cleanly.
 2. Take a full backup.
@@ -644,6 +643,10 @@ If rollback is required after a world upgrade, restore the
 matching full backup rather than only replacing the executable.
 
 ## Backup and Restore
+
+The current four-hour application backup and the actual world-loss incident
+are documented in [backup and recovery](backup-recovery.md). The steps
+below describe the separate full-container backup layer.
 
 ### Backup procedure
 
@@ -729,7 +732,8 @@ to the restored copy.
 
 ## Verification
 
-The following checks were confirmed complete by the lab owner:
+The following initial-installation checks were recorded as complete by
+the lab owner. Later transport and maintenance changes are noted below:
 
 - [x] Container starts with the intended resources.
 - [x] LAN addressing and DHCP reservation work.
@@ -737,7 +741,7 @@ The following checks were confirmed complete by the lab owner:
 - [x] Official Linux archive transfers and extracts successfully.
 - [x] Bedrock starts under the dedicated service account.
 - [x] The systemd service is active and enabled.
-- [x] The server binds UDP 19132.
+- [x] Initial network access was verified; current transport checks are documented in [operations](operations.md).
 - [x] An approved player joins over the LAN.
 - [x] The allowlist rejects unapproved players.
 - [x] A graceful restart preserves world changes.
@@ -755,7 +759,7 @@ Repeat the service checks with:
 systemctl is-enabled bedrock
 systemctl is-active bedrock
 ps -eo user,pid,args | grep '[b]edrock_server'
-ss -lunp | grep ':19132'
+ss -lntup
 journalctl -u bedrock -b -n 100 --no-pager
 ```
 
@@ -765,6 +769,11 @@ Service status, network connectivity, and successful gameplay
 are separate verification steps.
 
 ## Issues and Resolutions
+
+Later issues include world rollback, iPad connectivity, post-backup
+connection failures, and root SCP denial. See [operations](operations.md),
+[recovery](backup-recovery.md), and [updates](updates.md) for the observed
+symptoms, fixes and limits of what was established.
 
 | Issue | Cause or observation | Resolution |
 | --- | --- | --- |
@@ -794,9 +803,9 @@ It did not establish the root cause of the curl failures.
   Failed downloads lead to missing files. Archive testing should
   precede extraction.
 
-- **UDP and TCP require different tests.**
-  Bedrock uses UDP 19132 for this setup. The Java server uses
-  TCP 25565.
+- **Test the transport actually in use.**
+  This Bedrock deployment moved to NetherNet with TCP signaling and a
+  separate UDP range. The Java server uses TCP 25565.
 
 - **Least privilege works through multiple layers.**
   An unprivileged container, dedicated account, restricted file
