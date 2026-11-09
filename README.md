@@ -20,6 +20,7 @@ This homelab is currently under active development.
 
 - [Proxmox VE Installation](docs/proxmox/installation.md)
 - [Disk monitoring and systemd automation](docs/disk-monitor/README.md)
+- [Python Service Monitor and Incident Lab](docs/python-service-monitor/README.md)
 - [SUID AUDIT](docs/suid-audit/suid-audit.md)
 - [Network Overview](docs/networking/network-overview.md)
 - [Minecraft Java Server in a Proxmox LXC](docs/minecraft-lxc/MINECRAFT_README.md)
